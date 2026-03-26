@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Analog Clock & Countdown (Chris Version)</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; color: #00ffcc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        canvas { background: #111; border-radius: 50%; box-shadow: 0 0 20px rgba(0,255,204,0.2); }
+        .controls { margin-top: 20px; display: flex; gap: 10px; }
+        input, button { background: #222; color: #00ffcc; border: 1px solid #00ffcc; padding: 10px; border-radius: 5px; }
+        #countdown { font-size: 2em; margin-top: 10px; }
+    </style>
+
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
+</head>
+<body>
+    <canvas id="clock" width="300" height="300"></canvas>
+    <div id="countdown">00:00</div>
+    <div class="controls">
+        <input type="number" id="secInput" value="60" min="1">
+        <button onclick="startCountdown()">START</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('clock');
+        const ctx = canvas.getContext('2d');
+        const display = document.getElementById('countdown');
+        let timer = null;
+
+        function drawClock() {
+            ctx.clearRect(0, 0, 300, 300);
+            const now = new Date();
+            const sec = now.getSeconds();
+            const min = now.getMinutes();
+            const hour = now.getHours() % 12;
+
+            ctx.strokeStyle = '#00ffcc';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(150, 150, 140, 0, Math.PI*2); ctx.stroke();
+
+            // Hands
+            drawHand(hour * 30 + min * 0.5, 60, 6);
+            drawHand(min * 6, 100, 4);
+            drawHand(sec * 6, 120, 2, '#ff0055');
+            requestAnimationFrame(drawClock);
+        }
+        function drawHand(deg, len, width, color='#00ffcc') {
+            const rad = (deg - 90) * Math.PI / 180;
+            ctx.strokeStyle = color; ctx.lineWidth = width;
+            ctx.beginPath(); ctx.moveTo(150, 150);
+            ctx.lineTo(150 + len * Math.cos(rad), 150 + len * Math.sin(rad));
+            ctx.stroke();
+        }
+        function startCountdown() {
+            let s = parseInt(document.getElementById('secInput').value);
+            if(timer) clearInterval(timer);
+            timer = setInterval(() => {
+                s--;
+                display.innerText = Math.floor(s/60).toString().padStart(2,'0') + ":" + (s%60).toString().padStart(2,'0');
+                if(s <= 0) clearInterval(timer);
+            }, 1000);
+        }
+        drawClock();
+    </script>
+</body>
+</html>
